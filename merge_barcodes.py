@@ -1,4 +1,4 @@
-import sys, gzip
+import sys, gzip, zlib, base64
 
 fastqR1 = gzip.open( sys.argv[1] )
 fastqR2 = gzip.open( sys.argv[2] )
@@ -31,7 +31,10 @@ while True:
    	  sys.stderr.write( "FASTQ format error.\n" )
    	  sys.exit(1)
 
-   sys.stdout.buffer.write( b"@" + read1_id + b"__" + r1l2[1:-1] + b"_" + r1l4[1:-1] + b"\n" ) 
+   extra = r1l2[1:-1] + b":" + r1l4[1:-1]
+
+   sys.stdout.buffer.write( b"@" + read1_id + 
+   	   b"::" + base64.urlsafe_b64encode( zlib.compress( extra ) ) + b"\n" ) 
    sys.stdout.buffer.write( r2l2 )
    sys.stdout.buffer.write( b"+\n" )
    sys.stdout.buffer.write( r2l4 )
@@ -39,4 +42,3 @@ while True:
 
 # Use with
 # STAR --runThreadN 8 --genomeDir ref/starIndex --readFilesIn <(python3 merge_barcodes.py reads/AS-262401-LR-38394_R1.fastq.gz reads/AS-262401-LR-38394_R2.fastq.gz ) --outFileNamePrefix alignments/ --genomeLoad LoadAndKeep
-
